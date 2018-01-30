@@ -17,29 +17,54 @@ package metrics
 
 import (
 	"log"
+	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	r "gopkg.in/gorethink/gorethink.v3"
 
 	"github.com/nlnwa/sigridr/database"
 )
 
 type Sigridr struct {
-	Error *log.Logger
-	Db    *database.Rethink
+	pattern string
+	h       http.Handler
+	Error   *log.Logger
+	Db      *database.Rethink
 }
 
 // New allocates and returns a new metric for Sigridr
-func New(dbHost string, dbPort int, dbName string, logger *log.Logger) *Sigridr {
-	return &Sigridr{
+func New(dbHost string, dbPort int, dbName string, logger *log.Logger, pattern string) *Sigridr {
+	reg := prometheus.NewRegistry()
+	s := &Sigridr{
+		pattern: pattern,
+		h: promhttp.HandlerFor(reg, promhttp.HandlerOpts{
+			ErrorLog: logger,
+		}),
 		Error: logger,
 		Db:    database.New(database.WithName(dbName), database.WithAddress(dbHost, dbPort)),
 	}
+
+	c := prometheus.NewCounterFunc(prometheus.CounterOpts{
+		Name: "twitter_total_number_of_statuses",
+		Help: "Total number of statuses harvested",
+	}, s.Total)
+
+	reg.MustRegister(c)
+
+	return s
+}
+
+func (s *Sigridr) Handler() http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle(s.pattern, s.h)
+	return mux
 }
 
 // Total returns the total number of tweets harvested
 //
 // If database communication fails -1 is returned as a sentinel and the error is logged
-func (s *Sigridr) Total() interface{} {
+func (s *Sigridr) Total() float64 {
 	if err := s.Db.Connect(); err != nil {
 		s.Error.Printf("%v", err)
 		return -1
@@ -53,7 +78,7 @@ func (s *Sigridr) Total() interface{} {
 		s.Error.Printf("%v", err)
 		return -1
 	}
-	count := new(int)
+	count := new(float64)
 	if err := cursor.One(count); err != nil {
 		s.Error.Printf("%v", err)
 		return -1

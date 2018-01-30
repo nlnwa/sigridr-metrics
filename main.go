@@ -22,7 +22,6 @@ import (
 
 	"github.com/namsral/flag"
 
-	"github.com/nlnwa/sigridr-metrics/expvar"
 	"github.com/nlnwa/sigridr-metrics/metrics"
 )
 
@@ -43,13 +42,9 @@ func main() {
 
 	logger := log.New(os.Stderr, "ERROR: ", log.LstdFlags)
 
-	m := metrics.New(*dbHost, *dbPort, *dbName, logger)
-	expvar.Publish("count", expvar.Func(m.Total))
+	m := metrics.New(*dbHost, *dbPort, *dbName, logger, *pattern)
 
-	mux := http.NewServeMux()
-	mux.Handle(*pattern, expvar.Handler())
-
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), mux); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), m.Handler()); err != nil {
 		logger.Fatal(err)
 	}
 }
