@@ -46,8 +46,8 @@ func New(dbHost string, dbPort int, dbName string, logger *log.Logger, pattern s
 	}
 
 	c := prometheus.NewCounterFunc(prometheus.CounterOpts{
-		Name: "twitter_total_number_of_statuses",
-		Help: "Total number of statuses harvested",
+		Name: "sigridr_twitter_statuses_total",
+		Help: "Total number of twitter statuses harvested",
 	}, s.Total)
 
 	reg.MustRegister(c)
