@@ -22,12 +22,15 @@ import (
 
 	"github.com/namsral/flag"
 
+	"github.com/nlnwa/sigridr/database"
 	"github.com/nlnwa/sigridr-metrics/metrics"
 )
 
 func main() {
 	port := flag.Int("port", 8081, "port to listen on")
 	help := flag.Bool("help", false, "print this help message")
+	dbUser := flag.String("db-user", "admin", "database username")
+	dbPassword := flag.String("db-password", "", "database password")
 	dbPort := flag.Int("db-port", 28015, "database port")
 	dbHost := flag.String("db-host", "localhost", "database host")
 	dbName := flag.String("db-name", "sigridr", "database name")
@@ -42,7 +45,12 @@ func main() {
 
 	logger := log.New(os.Stderr, "ERROR: ", log.LstdFlags)
 
-	m := metrics.New(*dbHost, *dbPort, *dbName, logger, *pattern)
+	db := database.New(
+		database.WithName(*dbName),
+		database.WithAddress(*dbHost, *dbPort),
+		database.WithCredentials(*dbUser, *dbPassword))
+
+	m := metrics.New(db, logger, *pattern)
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), m.Handler()); err != nil {
 		logger.Fatal(err)

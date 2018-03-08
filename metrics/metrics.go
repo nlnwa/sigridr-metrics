@@ -34,7 +34,7 @@ type Sigridr struct {
 }
 
 // New allocates and returns a new metric for Sigridr
-func New(dbHost string, dbPort int, dbName string, logger *log.Logger, pattern string) *Sigridr {
+func New(db *database.Rethink, logger *log.Logger, pattern string) *Sigridr {
 	reg := prometheus.NewRegistry()
 	s := &Sigridr{
 		pattern: pattern,
@@ -42,7 +42,7 @@ func New(dbHost string, dbPort int, dbName string, logger *log.Logger, pattern s
 			ErrorLog: logger,
 		}),
 		Error: logger,
-		Db:    database.New(database.WithName(dbName), database.WithAddress(dbHost, dbPort)),
+		Db: db,
 	}
 
 	c := prometheus.NewCounterFunc(prometheus.CounterOpts{
