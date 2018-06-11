@@ -22,8 +22,8 @@ import (
 
 	"github.com/namsral/flag"
 
-	"github.com/nlnwa/sigridr/database"
 	"github.com/nlnwa/sigridr-metrics/metrics"
+	"github.com/nlnwa/sigridr/database"
 )
 
 func main() {
@@ -48,7 +48,8 @@ func main() {
 	db := database.New(
 		database.WithName(*dbName),
 		database.WithAddress(*dbHost, *dbPort),
-		database.WithCredentials(*dbUser, *dbPassword))
+		database.WithCredentials(*dbUser, *dbPassword),
+	)
 
 	m := metrics.New(db, logger, *pattern)
 
