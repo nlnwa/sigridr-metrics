@@ -21,7 +21,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	r "gopkg.in/gorethink/gorethink.v3"
+	r "gopkg.in/rebirthdb/rebirthdb-go.v4"
 
 	"github.com/nlnwa/sigridr/database"
 )
@@ -42,7 +42,7 @@ func New(db *database.Rethink, logger *log.Logger, pattern string) *Sigridr {
 			ErrorLog: logger,
 		}),
 		Error: logger,
-		Db: db,
+		Db:    db,
 	}
 
 	c := prometheus.NewCounterFunc(prometheus.CounterOpts{
